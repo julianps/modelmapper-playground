@@ -1,8 +1,7 @@
 # modelmapper-playground
 
-
 this is a personal-use repository, where i want to play around with the modelmapper framework. 
 
-## basic mapping performance
+## basic Microbenchmarking (JMH)
 
-I want to test the performance.
+The project should give a rough idea how long it takes to manually convert versus modelmapper converts the objects.
