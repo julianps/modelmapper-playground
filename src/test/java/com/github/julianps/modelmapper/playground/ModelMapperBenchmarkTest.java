@@ -14,34 +14,38 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class ModelMapperBenchmarkTest {
 
-
     @State(Scope.Thread)
     public static class BenchmarkState {
-
-        List<Integer> list;
+        List<User> randomUsers;
 
         @Setup(Level.Trial)
         public void initialize() {
-            Random rand = new Random();
-            list = new ArrayList<>();
-            for (int i = 0; i < 1000; i++) {
-                list.add(rand.nextInt());
-            }
+            randomUsers = UserFactory.generateRandomUsers();
         }
     }
 
     @Benchmark
-    public void benchmark1 (BenchmarkState state, Blackhole bh) {
-        List<Integer> list = state.list;
-        for (int i = 0; i < 1000; i++)
-            bh.consume (list.get (i));
+    public void ourStyle(BenchmarkState state, Blackhole bh) {
+        for (int i = 0; i < state.randomUsers.size(); i++) {
+            bh.consume(UserConverter.toUserDTO(state.randomUsers.get(i)));
+        }
+    }
+
+    @Benchmark
+    public void modelmapperStyle(BenchmarkState state, Blackhole bh) {
+        for (int i = 0; i < state.randomUsers.size(); i++) {
+            bh.consume(UserConverter.toUserDTOwithModelMapper(state.randomUsers.get(i)));
+        }
+    }
+
+    @Test
+    public void debugHelper(){
+        UserFactory.generateRandomUsers();
     }
 
     @Test
@@ -49,12 +53,12 @@ public class ModelMapperBenchmarkTest {
         Options options = new OptionsBuilder()
                 .include(this.getClass().getName() + ".*")
                 .mode(Mode.AverageTime)
-                .timeUnit(TimeUnit.MICROSECONDS)
+                .timeUnit(TimeUnit.MILLISECONDS)
                 .warmupTime(TimeValue.seconds(1))
-                .warmupIterations(2)
-                .measurementTime(TimeValue.seconds(1))
-                .measurementIterations(2)
-                .threads(2)
+                .warmupIterations(5)
+                .measurementTime(TimeValue.seconds(2))
+                .measurementIterations(5)
+                .threads(1)
                 .forks(1)
                 .shouldFailOnError(true)
                 .shouldDoGC(true)
